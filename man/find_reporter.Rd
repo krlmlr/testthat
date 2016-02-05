@@ -14,8 +14,8 @@ If not found, will return informative error message.
 Will return null if given NULL.
 }
 \examples{
-find_reporter("minimal")
-find_reporter("summary+fail")
+testthat:::find_reporter("minimal")
+testthat:::find_reporter("summary+fail")
 }
 \keyword{internal}
 

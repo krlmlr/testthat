@@ -55,8 +55,8 @@ with_reporter <- function(reporter, code) {
 #' @param reporter name of reporter
 #' @keywords internal
 #' @examples
-#' find_reporter("minimal")
-#' find_reporter("summary+fail")
+#' testthat:::find_reporter("minimal")
+#' testthat:::find_reporter("summary+fail")
 find_reporter <- function(reporter) {
   if (is.null(reporter)) return(NULL)
   if (inherits(reporter, "Reporter")) return(reporter)
