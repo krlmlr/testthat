@@ -25,6 +25,7 @@ expectation <- function(type, message, srcref = NULL) {
   )
 }
 
+#' @export
 expect <- function(exp, ..., srcref = NULL) {
   exp <- as.expectation(exp, ..., srcref = srcref)
 
@@ -100,7 +101,6 @@ expectation_ok <- function(exp) {
 
 
 
-#' @export
 as.expectation <- function(x, ...) UseMethod("as.expectation", x)
 
 #' @export
