@@ -19,7 +19,8 @@ Imports:
     praise,
     magrittr,
     R6 (>= 2.2.0),
-    methods
+    methods,
+    xml2
 Suggests:
     devtools,
     withr,
@@ -56,6 +57,7 @@ Collate:
     'reporter-check.R'
     'reporter-debug.R'
     'reporter-fail.R'
+    'reporter-junit.R'
     'reporter-list.R'
     'reporter-location.R'
     'reporter-minimal.R'
@@ -81,5 +83,5 @@ Collate:
     'try-again.R'
     'utils.R'
     'watcher.R'
-RoxygenNote: 5.0.1.9000
+RoxygenNote: 6.0.1
 Roxygen: list(markdown = TRUE)

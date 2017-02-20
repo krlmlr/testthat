@@ -1,5 +1,19 @@
 # testthat 1.0.2.9000
 
+* New option `testthat.default_check_reporter`, defaults to `"check"`. 
+  Continuous Integration system can set this option before evaluating
+  package test sources in order to direct test result details to known
+  location.
+
+* New option `testthat.junit.output_file`. If set, the JUnitReporter
+  will write the test results to the provided path rather than 
+  standard output.
+
+* Fixed JUnitReporter output format (#575). The testcase element now
+  includes both the `classname` attribute, which contains the testhat 
+  context, and the `name` attriute, which contains the testthat 
+  test name.
+
 * The default summary reporter aborts testing as soon as the limit given by the
   option `testthat.summary.max_reports` (default 15) is reached
   (#520).
@@ -57,6 +71,8 @@
 
 * New argument `load_helpers` in `test_dir()` (#505).
 
+* Bare expectations notify the reporter again. This is achieved by running all tests inside `test_code()` by default (#427, #498).
+
 * New `DebugReporter` that calls a better version of `recover()` in case of failures, errors, or warnings (#360, #470).
 
 * `compare.numeric()` respects `check.attributes()` so `expect_equivalent()`
@@ -82,9 +98,11 @@
 
 * Fixed `compare.character` for vectors of length > 5 (#513, @brodieG)
 
+* New JUnit reporter `JunitReporter`. (#481, @lbartnik)
+
 # testthat 1.0.2
 
-* Ensure 'std::logic_error()' constructed with 'std::string()'
+* Ensure `std::logic_error()` constructed with `std::string()`
   argument, to avoid build errors on Solaris.
 
 # testthat 1.0.1

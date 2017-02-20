@@ -6,6 +6,7 @@ test_that("can locate reporter from name", {
   expect_that(find_reporter("tap"),     equals(TapReporter$new()))
   expect_that(find_reporter("list"),    equals(ListReporter$new()))
   expect_that(find_reporter("multi"),   equals(MultiReporter$new()))
+  expect_that(find_reporter("junit"),   equals(JunitReporter$new()))
   expect_that(find_reporter(""),        equals(Reporter$new()))
 })
 
@@ -48,7 +49,7 @@ test_that("reporters produce consistent output", {
       expect_error(
         withr::with_options(
           list(expressions = Cstack_info()[["eval_depth"]] + 200),
-          test_file(test_path("reporters/tests.R"), reporter)
+          test_file(test_path("reporters/tests.R"), reporter, wrap = FALSE)
         ),
         error_regexp
       ),
@@ -75,4 +76,5 @@ test_that("reporters produce consistent output", {
   save_report("teamcity")
   save_report("silent")
   save_report("rstudio")
+  save_report("junit", reporter = createJunitReporterMock())
 })
