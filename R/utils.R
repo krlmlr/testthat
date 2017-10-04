@@ -8,6 +8,15 @@ starts_with <- function(string, prefix) {
   substr(string, 1, nchar(prefix)) == prefix
 }
 
+console_width <- function() {
+  rstudio <- Sys.getenv("RSTUDIO_CONSOLE_WIDTH")
+  if (identical(rstudio, "")) {
+    getOption("width", 80)
+  } else {
+    as.integer(rstudio)
+  }
+}
+
 is_directory <- function(x) file.info(x)$isdir
 is_readable <- function(x) file.access(x, 4) == 0
 
@@ -29,25 +38,13 @@ first_last <- function(x, max = 10, filler = "...") {
 
 safe_read_lines <- function(file) {
   tryCatch(
-    readLines(file, warn = FALSE),
+    read_lines(file),
     error = function(e) {
       warning(conditionMessage(e), call. = NULL)
       character()
     }
   )
 }
-
-read_lines_with_encoding <- function(path, encoding) {
-  if (encoding == "unknown") {
-    readLines(path, warn = FALSE)
-  } else {
-    con <- file(path, "r", encoding = encoding)
-    on.exit(close(con), add = TRUE)
-
-    readLines(con, warn = FALSE)
-  }
-}
-
 
 # Tools for finding srcrefs -----------------------------------------------
 
@@ -96,4 +93,9 @@ f_name <- function(x) {
 escape_regex <- function(x) {
   chars <- c("*", ".", "?", "^", "+", "$", "|", "(", ")", "[", "]", "{", "}", "\\")
   gsub(paste0("([\\", paste0(collapse = "\\", chars), "])"), "\\\\\\1", x, perl = TRUE)
+}
+
+# For R 3.1
+dir.exists <- function(paths) {
+  file.exists(paths) & file.info(paths)$isdir
 }

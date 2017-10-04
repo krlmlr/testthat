@@ -54,6 +54,10 @@ JunitReporter <- R6::R6Class("JunitReporter", inherit = Reporter,
     },
 
     start_reporter = function() {
+      if (!is_installed("xml2")) {
+        stop("Please install the `xml2` package", call. = FALSE)
+      }
+
       self$timer <- private$proctime()
       self$doc   <- xml2::xml_new_document()
       self$root  <- xml2::xml_add_child(self$doc, 'testsuites')
@@ -124,7 +128,7 @@ JunitReporter <- R6::R6Class("JunitReporter", inherit = Reporter,
       } else if (inherits(self$out, "connection")) {
         file <- tempfile()
         xml2::write_xml(self$doc, file, format = TRUE)
-        writeLines(readLines(file), self$out)
+        write_lines(read_lines(file), self$out)
       } else {
         stop('unsupported output type: ', toString(self$out))
       }

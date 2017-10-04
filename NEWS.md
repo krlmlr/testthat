@@ -1,5 +1,21 @@
 # testthat 1.0.2.9000
 
+* `with_mock()` disallows mocking of functions in base packages, because this doesn't work with the current development version of R (#553).
+
+* `expect_reference()` checks if two names point to the same object (#622).
+
+* Output expectations (`expect_output()`, `expect_message()`, 
+  `expect_warning()`, and `expect_silent()`) all invisibly return the first
+  argument to be consistent with the other expectations (#615).
+
+* The `encoding` argument to `test_file()`, `source_file()`, and `test_dir()` 
+  has been deprecated. All files are now read and written as UTF-8 (#510, #605).
+
+* New `skip_if()` makes it easy to skip a test when a condition is true (#571).
+
+* `test_examples()` now works with installed packages as well as source
+  packages (@jimhester, #532).
+
 * Improved behavior of the `SummaryReporter` when the maximum number of errors
   reported is reached.
 
@@ -107,6 +123,14 @@
 * Fixed `compare.character` for vectors of length > 5 (#513, @brodieG)
 
 * New JUnit reporter `JunitReporter`. (#481, @lbartnik)
+
+* Mirror `hash` parameter in `auto_test()` and `auto_test_package()` in order 
+  to enable switching to faster, time-stamp-based modification detection 
+  (#598, @katrinleinweber)
+
+* Clarified `skip` semantics in documentation (@brodieG)
+
+* Extend `expect_length()` to work with any object that has a `length` method (#564, @nealrichardson)
 
 # testthat 1.0.2
 

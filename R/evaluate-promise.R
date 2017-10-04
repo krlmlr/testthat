@@ -52,7 +52,7 @@ evaluate_promise <- function(code, print = FALSE) {
     with_sink(temp, print(result$value))
   }
 
-  output <- paste0(readLines(temp, warn = FALSE), collapse = "\n")
+  output <- paste0(read_lines(temp), collapse = "\n")
 
   list(
     result = result$value,
@@ -115,12 +115,16 @@ capture_output_lines <- function(code, print = FALSE, width = 80) {
   old <- options(width = width)
   on.exit(options(old), add = TRUE)
 
+  old_width <- Sys.getenv("RSTUDIO_CONSOLE_WIDTH")
+  Sys.setenv("RSTUDIO_CONSOLE_WIDTH" = width)
+  on.exit(Sys.setenv("RSTUDIO_CONSOLE_WIDTH" = old_width), add = TRUE)
+
   result <- with_sink(temp, withVisible(code))
   if (result$visible && print) {
     with_sink(temp, print(result$value))
   }
 
-  readLines(temp, warn = FALSE)
+  read_lines(temp)
 }
 
 with_sink <- function(connection, code, ...) {
