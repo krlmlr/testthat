@@ -1,6 +1,33 @@
 # testthat 1.0.2.9000
 
+* New default reporter `ReporterProgress` replaces the previous 
+  `SummaryReporter`. It's a careful rethining of the default output that is
+  both more aesthetical pleasing and makes the most important information
+  available upfront (#529).
+
+* `test_dir()` (and hence `test_package()`, and `test_check()`) now unsets
+  the `R_TESTS` env var (#603)
+
+* `expect_error()` gains a new `language` argument allowing you to temporarily
+  override the language that errors are translated to (#565).
+
+* `expect_setequal()` compares two set (represented by vectors), ignoring
+  duplicates and differences in order (#528).
+
+* `expect_output_file()` recieved a few tweaks. It now defaults to 
+  `update = TRUE` and no longer fails on first run. It gains a `print` 
+  argument to automatically print the input (#627).
+  
+* Two new prefixes are recognised in the `test/` directory. Files starting
+  with `setup` are run before tests (but unlike `helpers` are not run in
+  `devtools::load_all()`). Files starting with `teardown` are run after all
+  tests are completed (#589).
+
 * `with_mock()` disallows mocking of functions in base packages, because this doesn't work with the current development version of R (#553).
+
+* `test_dir()`, `test_package()`, and `test_check()` gain `stop_on_failure` 
+  and `stop_on_waring` arguments that control whether or not an error 
+  is signalled if any tests fail or generate warnings (#609, #619).
 
 * `expect_reference()` checks if two names point to the same object (#622).
 
@@ -61,7 +88,8 @@
 
 * New `teardown()` allows you to run code that is guaranteed to be executed at 
   the end of a `test_file()`. This is useful if you want to pair cleanup code
-  with the code that messes up state (#536)
+  with the code that messes up state (#536). `setup()` is a similar helper
+  that works like `local()` and allows you to run code during setup.
 
 * `test_path()` now generates correct path when called from within 
   `tools::testInstalledPackage()` (#542).

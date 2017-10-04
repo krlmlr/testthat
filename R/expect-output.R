@@ -113,51 +113,38 @@ expect_output <- function(object, regexp = NULL, ..., info = NULL, label = NULL)
 
 #' @export
 #' @rdname output-expectations
-#' @param file Path to a "golden" text file that contains the desired output.
-#' @param update Should the "golden" text file be updated? Defaults to
-#'   `FALSE`, but that it will automatically create output if the file
-#'   does not exist (i.e. on the first run).
-#' @inheritParams capture_output
-expect_output_file <- function(object, file, update = FALSE, ...,
-                               info = NULL, label = NULL, width = 80) {
-  lab <- make_label(object, label)
-
-  output <- capture_output_lines(object, print = FALSE, width = width)
-  if (!file.exists(file)) {
-    write_lines(output, file)
-  }
-
-  expr <- bquote(
-    expect_equal(output, safe_read_lines(.(file)), ..., info = info, label = lab)
-  )
-  withCallingHandlers(
-    eval(expr),
-    expectation = function(e) {
-      if (update && expectation_failure(e)) {
-        tryCatch(write_lines(output, file), error = function(e) NULL)
-      }
-    }
-  )
-}
-
-
-#' @export
-#' @rdname output-expectations
-expect_error <- function(object, regexp = NULL, class = NULL, ..., info = NULL,
-                         label = NULL) {
+#' @param language Optionally overrides current language so that error messages
+#'    are constant regardless of system language. Most common option is "en".
+expect_error <- function(object,
+                         regexp = NULL,
+                         class = NULL,
+                         ...,
+                         info = NULL,
+                         label = NULL,
+                         language = NULL) {
 
   lab <- make_label(object, label)
   if (!is.null(regexp) && !is.null(class)) {
     stop("You may only specify one of `regexp` and `class`", call. = FALSE)
   }
 
+  cur_lang <- Sys.getenv("LANGUAGE")
+
   error <- tryCatch(
     {
+      if (!is.null(language)) {
+        Sys.setenv(LANGUAGE = language)
+      }
       object
       NULL
     },
     error = function(e) {
       e
+    },
+    finally = {
+      if (!is.null(language)) {
+        Sys.setenv(LANGUAGE = cur_lang)
+      }
     }
   )
 

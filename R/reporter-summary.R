@@ -3,10 +3,9 @@ NULL
 
 #' Test reporter: summary of errors.
 #'
-#' This is the most useful reporting reporter as it lets you know both which
-#' tests have run successfully, as well as fully reporting information about
-#' failures and errors.  It is the default reporting reporter used by
-#' [test_dir()] and [test_file()].
+#' This is a reporter designed for interactive usage: it lets you know which
+#' tests have run successfully and as well as fully reporting information about
+#' failures and errors.
 #'
 #' You can use the `max_reports` field to control the maximum number
 #' of detailed reports produced by this reporter. This is useful when running
@@ -125,6 +124,7 @@ SummaryReporter <- R6::R6Class("SummaryReporter", inherit = Reporter,
 
       self$cat_tight(paste(report_summary, collapse = collapse))
       if (n > max_n) {
+        self$cat_line()
         self$cat_line("  ... and ", n - max_n, " more")
       }
 
