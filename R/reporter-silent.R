@@ -10,12 +10,13 @@ NULL
 #'
 #' @export
 #' @family reporters
-SilentReporter <- R6::R6Class("SilentReporter", inherit = Reporter,
+SilentReporter <- R6::R6Class("SilentReporter",
+  inherit = Reporter,
   public = list(
     .expectations = NULL,
 
-    initialize = function() {
-      super$initialize()
+    initialize = function(...) {
+      super$initialize(...)
       self$.expectations <- Stack$new()
     },
 

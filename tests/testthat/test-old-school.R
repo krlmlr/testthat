@@ -7,7 +7,6 @@ test_that("old school logical works", {
 
 test_that("old school types still work", {
   expect_success(expect_that(1L, is_a("integer")))
-
 })
 
 test_that("tidyverse conflicts throw warnings", {
@@ -39,10 +38,6 @@ test_that("old school equality tests still work", {
   expect_success(expect_that(10, equals(10)))
   expect_success(expect_that(10, is_identical_to(10)))
   expect_success(expect_that(10, is_equivalent_to(10)))
-})
-
-test_that("old school reference equality test", {
-  expect_success(expect_equal_to_reference(1, "one.rds"))
 })
 
 test_that("old school output tests still work", {

@@ -14,8 +14,10 @@ NULL
 #' @export
 #' @rdname oldskool
 is_null <- function() {
-  warning("is_null is deprecated. Please use `expect_null` instead.",
-    call. = FALSE)
+  warning(
+    "is_null is deprecated. Please use `expect_null` instead.",
+    call. = FALSE
+  )
   function(x) expect_null(x)
 }
 
@@ -78,7 +80,7 @@ is_identical_to <- function(expected, label = NULL) {
 #' @export
 #' @rdname oldskool
 equals_reference <- function(file, label = NULL, ...) {
-  function(x) expect_equal_to_reference(x, file, expected.label = label, ...)
+  function(x) expect_known_value(x, file, expected.label = label, ...)
 }
 
 #' @export
@@ -124,8 +126,10 @@ matches <- function(regexp, all = TRUE, ...) {
 #' @export
 #' @param amount maximum duration in seconds
 takes_less_than <- function(amount) {
-  warning("takes_less_than() is deprecated because it is stochastic and unreliable",
-    call. = FALSE)
+  warning(
+    "takes_less_than() is deprecated because it is stochastic and unreliable",
+    call. = FALSE
+  )
 
   function(expr) {
     duration <- system.time(force(expr))["elapsed"]
@@ -136,4 +140,3 @@ takes_less_than <- function(amount) {
     )
   }
 }
-

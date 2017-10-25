@@ -28,7 +28,11 @@ test_that("class = string matches class of error", {
   expect_success(expect_error(blah(), class = "blah"))
   expect_failure(
     expect_error(blah(), class = "blech"),
-    "did not throw an error of class"
+    "threw an error with unexpected class"
+  )
+  expect_failure(
+    expect_condition(blah(), class = "blech"),
+    "threw an condition with unexpected class"
   )
 })
 
@@ -36,14 +40,13 @@ test_that("... passed on to grepl", {
   expect_success(expect_error(stop("X"), "x", ignore.case = TRUE))
 })
 
-test_that("can optionally override language", {
-  skip_on_os("windows")
+test_that("generates informative failures", {
+  expect_known_failure("test-expect-error.txt", {
+    expect_error(null())
+    expect_error(stop("!"), NA)
 
-  old <- Sys.getenv("LANGUAGE")
-  Sys.setenv(LANGUAGE = "fr")
-  on.exit(Sys.setenv(LANGUAGE = old))
-
-  expect_success(expect_error(hello, "introuvable"))
-  expect_success(expect_error(hello, "introuvable", language = "fr"))
-  expect_failure(expect_error(hello, "introuvable", language = "en"))
+    expect_error(stop("xxx"), regexp = "zzz")
+    expect_error(stop("xxx"), class = "zzz")
+    expect_error(stop("xxx"), regexp = "zzz", class = "zzz")
+  })
 })

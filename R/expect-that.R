@@ -49,7 +49,7 @@ succeed <- function(message = "Success has been forced") {
 #' Negate an expectation
 #'
 #' This negates an expectation, making it possible to express that you
-#' want the opposite of a standard expectation. This function is soft-deprecated
+#' want the opposite of a standard expectation. This function is deprecated
 #' and will be removed in a future version.
 #'
 #' @param f an existing expectation function
@@ -62,12 +62,12 @@ not <- function(f) {
   negate <- function(expt) {
     expect(
       !expectation_success(expt),
-      message = paste0("NOT(", expt$message, ")"),
+      failure_message = paste0("NOT(", expt$message, ")"),
       srcref = expt$srcref
     )
   }
 
   function(...) {
-    negate(capture_first_expectation(f(...)))
+    negate(capture_expectation(f(...)))
   }
 }

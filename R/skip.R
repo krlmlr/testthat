@@ -88,7 +88,10 @@ skip_if_not_installed <- function(pkg, minimum_version = NULL) {
   if (!is.null(minimum_version)) {
     installed_version <- utils::packageVersion(pkg)
     if (installed_version < minimum_version) {
-      skip(paste0(pkg, " is installed in version ", installed_version, ", required ", minimum_version))
+      skip(paste0(
+        "Installed ", pkg, " is version ", installed_version, "; ",
+        "but ", minimum_version, " is required"
+      ))
     }
   }
 
@@ -110,8 +113,10 @@ skip_on_cran <- function() {
 #'   `"windows"`, `"mac"`, `"linux"` and `"solaris"`.
 #' @rdname skip
 skip_on_os <- function(os) {
-  os <- match.arg(os, c("windows", "mac", "linux", "solaris"),
-    several.ok = TRUE)
+  os <- match.arg(
+    os, c("windows", "mac", "linux", "solaris"),
+    several.ok = TRUE
+  )
   sysname <- tolower(Sys.info()[["sysname"]])
 
   switch(sysname,
@@ -152,4 +157,29 @@ skip_on_bioc <- function() {
   }
 
   skip("On Bioconductor")
+}
+
+#' @export
+#' @rdname skip
+skip_if_translated <- function() {
+  if (!is_english()) {
+    return(invisible(TRUE))
+  }
+
+  skip("Running in non-English environment")
+}
+
+is_english <- function() {
+  lang <- Sys.getenv("LANGUAGE")
+  if (identical(lang, "en")) {
+    return(TRUE)
+  }
+
+  if (.Platform$OS.type == "windows") {
+    lc <- sub("\\..*", "", sub("_.*", "", Sys.getlocale("LC_CTYPE")))
+    lc == "C" || lc == "English"
+  } else {
+    lc <- sub("\\..*", "", Sys.getlocale("LC_MESSAGES"))
+    lc == "C" || substr(lc, 1, 2) == "en"
+  }
 }

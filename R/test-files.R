@@ -11,72 +11,14 @@ test_env <- function() {
   new.env(parent = globalenv())
 }
 
-#' Run all of the tests in a directory.
-#'
-#' There are four classes of `.R` files that have special behaviour:
-#' * Test files start with `test` and are executed in alphabetical order.
-#' * Helper files start with `helper` and are executed before tests are
-#'   run and from `devtools::load_all()`.
-#' * Setup files start with `setup` and are executed before tests, but not
-#'   during `devtools::load_all()`.
-#' * Teardown files start with `teardown` and are executed after the tests
-#'   are run.
-#'
-#' @param path path to tests
-#' @param filter If not `NULL`, only tests with file names matching this
-#'   regular expression will be executed.  Matching will take on the file
-#'   name after it has been stripped of `"test-"` and `".R"`.
-#' @param ... Additional arguments passed to [grepl()] to control filtering.
-#' @param stop_on_failure If `TRUE`, throw an error if any tests fail.
-#' @param stop_on_warning If `TRUE`, throw an error if any tests generate
-#'   warnings.
-#' @inheritParams test_file
-#'
-#' @return The results of the reporter function on all test results.
-#' @export
-test_dir <- function(path,
-                     filter = NULL,
-                     reporter = default_reporter(),
-                     env = test_env(), ...,
-                     encoding = "unknown",
-                     load_helpers = TRUE,
-                     stop_on_failure = FALSE,
-                     stop_on_warning = FALSE
-                     ) {
-  if (!missing(encoding) && !identical(encoding, "UTF-8")) {
-    warning("`encoding` is deprecated; all files now assumed to be UTF-8", call. = FALSE)
-  }
-
-  if (load_helpers) {
-    source_test_helpers(path, env)
-  }
-  source_test_setup(path, env)
-  on.exit(source_test_teardown(path, env), add = TRUE)
-
-  # unset R_TESTS which causes R to have special (annoying) behaviour
-  old_r_tests <- Sys.getenv("R_TESTS")
-  Sys.unsetenv("R_TESTS")
-  on.exit(Sys.setenv("R_TESTS" = old_r_tests), add = TRUE)
-
-  paths <- find_test_scripts(path, filter, ...)
-
-  test_files(
-    paths,
-    reporter = reporter,
-    env = env,
-    stop_on_failure = stop_on_failure,
-    stop_on_warning = stop_on_warning
-  )
-}
-
 test_files <- function(paths,
                        reporter = default_reporter(),
                        env = test_env(),
                        stop_on_failure = FALSE,
-                       stop_on_warning = FALSE
-                       ) {
+                       stop_on_warning = FALSE,
+                       wrap = TRUE) {
   if (length(paths) == 0) {
-    stop('No matching test file in dir')
+    stop("No matching test file in dir")
   }
 
   current_reporter <- find_reporter(reporter)
@@ -89,7 +31,7 @@ test_files <- function(paths,
       reporter = current_reporter,
       start_end_reporter = FALSE,
       load_helpers = FALSE,
-      wrap = TRUE
+      wrap = wrap
     )
   )
 
@@ -185,8 +127,10 @@ test_file <- function(path, reporter = default_reporter(), env = test_env(),
     {
       lister$start_file(basename(path))
 
-      source_file(path, new.env(parent = env),
-                  chdir = TRUE, wrap = wrap)
+      source_file(
+        path, new.env(parent = env),
+        chdir = TRUE, wrap = wrap
+      )
 
       end_context()
     }

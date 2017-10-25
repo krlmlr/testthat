@@ -15,8 +15,8 @@
 #' @param hash hashes are more accurate at detecting changes, but are slower
 #'   for large files.  When FALSE, uses modification time stamps
 #' @export
+#' @keywords internal
 watch <- function(path, callback, pattern = NULL, hash = TRUE) {
-
   prev <- dir_state(path, pattern, hash = hash)
 
   repeat {

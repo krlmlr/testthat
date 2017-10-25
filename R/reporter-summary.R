@@ -16,7 +16,8 @@ NULL
 #'
 #' @export
 #' @family reporters
-SummaryReporter <- R6::R6Class("SummaryReporter", inherit = Reporter,
+SummaryReporter <- R6::R6Class("SummaryReporter",
+  inherit = Reporter,
   public = list(
     failures = NULL,
     skips = NULL,
@@ -25,8 +26,11 @@ SummaryReporter <- R6::R6Class("SummaryReporter", inherit = Reporter,
     show_praise = TRUE,
     omit_dots = FALSE,
 
-    initialize = function(show_praise = TRUE, omit_dots = getOption("testthat.summary.omit_dots"), max_reports = getOption("testthat.summary.max_reports", 15L)) {
-      super$initialize()
+    initialize = function(show_praise = TRUE,
+                          omit_dots = getOption("testthat.summary.omit_dots"),
+                          max_reports = getOption("testthat.summary.max_reports", 10L),
+                          ...) {
+      super$initialize(...)
       self$failures <- Stack$new()
       self$skips <- Stack$new()
       self$warnings <- Stack$new()
@@ -107,8 +111,9 @@ SummaryReporter <- R6::R6Class("SummaryReporter", inherit = Reporter,
     cat_reports = function(header, expectations, max_n, summary_fun,
                            collapse = "\n\n") {
       n <- length(expectations)
-      if (n == 0L)
+      if (n == 0L) {
         return()
+      }
 
       self$rule(header)
 

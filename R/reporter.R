@@ -21,8 +21,12 @@ Reporter <- R6::R6Class("Reporter",
 
     out = NULL,
 
-    initialize = function() {
-      self$out <- stdout()
+    initialize = function(file = getOption("testthat.output_file", stdout())) {
+      self$out <- file
+      if (is.character(self$out) && file.exists(self$out)) {
+        # If writing to a file, overwrite it if it exists
+        file.remove(self$out)
+      }
     },
 
     cat = function(..., file = NULL, sep = " ", fill = FALSE, labels = NULL,
@@ -34,7 +38,14 @@ Reporter <- R6::R6Class("Reporter",
         warning("append ignored", call. = FALSE)
       }
 
-      cat(..., file = self$out, sep = sep, fill = fill, labels = labels)
+      cat(
+        ...,
+        file = self$out,
+        sep = sep,
+        fill = fill,
+        labels = labels,
+        append = is.character(self$out) # If writing to file, append=TRUE
+      )
     },
 
     cat_tight = function(...) {
@@ -50,10 +61,13 @@ Reporter <- R6::R6Class("Reporter",
     },
 
     rule = function(..., pad = "-") {
-      if (nargs() == 0) {
+      title <- c(...)
+      pad <- fancy_line(pad)
+
+      if (length(title) == 0) {
         title <- ""
       } else {
-        title <- paste0(..., " ")
+        title <- paste0(pad, " ", ..., " ")
       }
       width <- console_width() - nchar(title)
       self$cat_line(title, paste(rep(pad, width, collapse = "")))
@@ -66,7 +80,6 @@ Reporter <- R6::R6Class("Reporter",
     # in the same way as tests and expectations.
     .context = NULL,
     .start_context = function(context) {
-
       if (!is.null(self$.context)) {
         self$end_context(self$.context)
       }
@@ -85,13 +98,32 @@ Reporter <- R6::R6Class("Reporter",
   )
 )
 
+fancy_line <- function(x) {
+  if (!l10n_info()$`UTF-8`) {
+    return(x)
+  }
+
+  switch(x,
+    "-" = "\u2500",
+    "=" = "\u2550",
+    x
+  )
+}
+
 #' Retrieve the default reporter.
 #'
-#' This will be [SummaryReporter()] unless option
-#' `testthat.default_reporter` is set
+#' The defaults are:
+#' * [SummaryReporter] for interactive; override with `testthat.default_reporter`
+#' * [CheckReporter] for R CMD check; override with `testthat.default_check_reporter`
 #'
 #' @export
 #' @keywords internal
 default_reporter <- function() {
   getOption("testthat.default_reporter", "progress")
+}
+
+#' @export
+#' @rdname default_reporter
+check_repoter <- function() {
+  getOption("testthat.default_check_reporter", "check")
 }

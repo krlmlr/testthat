@@ -21,10 +21,13 @@ Calling \code{use_catch()} will:
 \code{testthat} package will understand how to run your package's
 unit tests,
 \item Create an example test file \code{src/test-example.cpp}, which
-showcases how you might use Catch to write a unit test, and
+showcases how you might use Catch to write a unit test,
 \item Add a test file \code{tests/testthat/test-cpp.R}, which ensures that
 \code{testthat} will run your compiled tests during invocations of
-\code{devtools::test()} or \code{R CMD check}.
+\code{devtools::test()} or \code{R CMD check}, and
+\item Create a file \code{R/catch-routine-registration.R}, which ensures that
+\R will automatically register this routine when
+\code{tools::package_native_routine_registration_skeleton()} is invoked.
 }
 
 C++ unit tests can be added to C++ source files within the
@@ -72,6 +75,25 @@ ensure that any unit tests within will not be compiled or
 run when using the Solaris Studio compilers (as these are
 currently unsupported by Catch). This should make it
 easier to submit packages to CRAN that use Catch.
+}
+
+\section{Symbol Registration}{
+
+
+If you've opted to disable dynamic symbol lookup in your
+package, then you'll need to explicitly export a symbol
+in your package that \code{testthat} can use to run your unit
+tests. \code{testthat} will look for a routine with one of the names:
+
+\preformatted{
+    C_run_testthat_tests
+    c_run_testthat_tests
+    run_testthat_tests
+}
+
+See \href{https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Controlling-visibility}{Controlling Visibility}
+and \href{https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Registering-symbols}{Registering Symbols}
+in the \strong{Writing R Extensions} manual for more information.
 }
 
 \section{Advanced Usage}{

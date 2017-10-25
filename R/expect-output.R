@@ -1,10 +1,9 @@
 #' Expectation: does code produce output/message/warning/error?
 #'
-#' Use `expect_output()`, `expect_message()`, `expect_warning()`,
-#' or `expect_error()` to check for specific outputs. Use
-#' `expect_silent()` to assert that there should be no output of
-#' any type. The file-based `expect_output_file()` compares the output
-#' to the contents of a text file and optionally updates it.
+#' Use `expect_output()`, `expect_message()` and `expect_warning()` to
+#' match specified outputs. Use `expect_error()` or `expect_condition()` to
+#' match individual errors or conditions. Use `expect_silent()` to assert that
+#' there should be no output of any type.
 #'
 #' Note that warnings are captured by a custom signal handler: this means
 #' that `options(warn)` has no effect.
@@ -23,8 +22,8 @@
 #' @param all For messages and warnings, do all need to match the `regexp`
 #'    (TRUE), or does only one need to match (FALSE)
 #' @family expectations
-#' @return All expectations apart from `expect_error()` invisibly return the
-#'   first argument. `expect_error()` always invisibly returns `NULL`.
+#' @return The first argument, invisibly. If `expect_error()` captures an
+#'   error, that is returned instead of the value.
 #' @examples
 #' # Output --------------------------------------------------------------------
 #' str(mtcars)
@@ -88,169 +87,206 @@ NULL
 #' @export
 #' @rdname output-expectations
 expect_output <- function(object, regexp = NULL, ..., info = NULL, label = NULL) {
-  lab <- make_label(object, label)
-  output <- capture_output(object)
+  act <- quasi_capture(enquo(object), capture_output, label = label)
 
   if (identical(regexp, NA)) {
     expect(
-      identical(output, ""),
-      sprintf("%s produced output.\n%s", lab, encodeString(output)),
+      identical(act$cap, ""),
+      sprintf("%s produced output.\n%s", act$lab, encodeString(act$cap)),
       info = info
     )
-  } else if (is.null(regexp) || identical(output, "")) {
+  } else if (is.null(regexp) || identical(act$cap, "")) {
     expect(
-      !identical(output, ""),
-      sprintf("%s produced no output", lab),
+      !identical(act$cap, ""),
+      sprintf("%s produced no output", act$lab),
       info = info
     )
   } else {
-    expect_match(output, regexp, ..., info = info, label = lab)
+    expect_match(act$cap, regexp, ..., info = info, label = act$lab)
   }
 
-  invisible(object)
+  invisible(act$val)
 }
 
 
 #' @export
 #' @rdname output-expectations
-#' @param language Optionally overrides current language so that error messages
-#'    are constant regardless of system language. Most common option is "en".
 expect_error <- function(object,
                          regexp = NULL,
                          class = NULL,
                          ...,
                          info = NULL,
-                         label = NULL,
-                         language = NULL) {
+                         label = NULL) {
+  act <- quasi_capture(enquo(object), capture_error, label = label)
+  msg <- compare_condition(act$cap, act$lab, regexp = regexp, class = class, ...)
+  expect(is.null(msg), msg, info = info)
 
-  lab <- make_label(object, label)
-  if (!is.null(regexp) && !is.null(class)) {
-    stop("You may only specify one of `regexp` and `class`", call. = FALSE)
-  }
-
-  cur_lang <- Sys.getenv("LANGUAGE")
-
-  error <- tryCatch(
-    {
-      if (!is.null(language)) {
-        Sys.setenv(LANGUAGE = language)
-      }
-      object
-      NULL
-    },
-    error = function(e) {
-      e
-    },
-    finally = {
-      if (!is.null(language)) {
-        Sys.setenv(LANGUAGE = cur_lang)
-      }
-    }
-  )
-
-  if (!is.null(class)) {
-    expect(
-      inherits(error, class),
-      sprintf("%s did not throw an error of class '%s'.", lab, class),
-      info = info
-    )
-  } else if (identical(regexp, NA)) {
-    expect(
-      is.null(error),
-      sprintf("%s threw an error.\n%s", lab, error$message),
-      info = info
-    )
-  } else if (is.null(regexp) || is.null(error)) {
-    expect(
-      !is.null(error),
-      sprintf("%s did not throw an error.", lab),
-      info = info
-    )
-  } else {
-    expect_match(error$message, regexp, ..., info = info)
-  }
-
-  invisible(NULL)
+  invisible(act$val %||% act$err)
 }
+
+#' @export
+#' @rdname output-expectations
+expect_condition <- function(object,
+                             regexp = NULL,
+                             class = NULL,
+                             ...,
+                             info = NULL,
+                             label = NULL) {
+  act <- quasi_capture(enquo(object), capture_condition, label = label)
+  msg <- compare_condition(
+    act$cap, act$lab, regexp = regexp, class = class, ...,
+    cond_type = "condition"
+  )
+  expect(is.null(msg), msg, info = info)
+
+  invisible(act$val %||% act$err)
+}
+
 
 #' @export
 #' @rdname output-expectations
 expect_message <- function(object, regexp = NULL, ..., all = FALSE,
                            info = NULL, label = NULL) {
+  act <- quasi_capture(enquo(object), capture_messages, label = label)
+  msg <- compare_messages(act$cap, act$lab, regexp = regexp, all = all, ...)
+  expect(is.null(msg), msg, info = info)
 
-  lab <- make_label(object, label)
-  messages <- capture_messages(object)
-  n <- length(messages)
-  bullets <- paste("* ", messages, collapse = "\n")
-
-  msg <- sprintf(ngettext(n, "%d message", "%d messages"), n)
-
-  if (identical(regexp, NA)) {
-    expect(
-      length(messages) == 0,
-      sprintf("%s showed %s.\n%s", lab, msg, bullets),
-      info = info
-    )
-  } else if (is.null(regexp) || length(messages) == 0) {
-    expect(
-      length(messages) > 0,
-      sprintf("%s showed %s", lab, msg),
-      info = info
-    )
-  } else {
-    expect_match(messages, regexp, all = all, ..., info = info)
-  }
-
-  invisible(object)
+  invisible(act$val)
 }
 
 #' @export
 #' @rdname output-expectations
 expect_warning <- function(object, regexp = NULL, ..., all = FALSE,
                            info = NULL, label = NULL) {
+  act <- quasi_capture(enquo(object), capture_warnings, label = label)
+  msg <- compare_messages(
+    act$cap, act$lab, regexp = regexp, all = all, ...,
+    cond_type = "warnings"
+  )
+  expect(is.null(msg), msg, info = info)
 
-  lab <- make_label(object, label)
-  warnings <- capture_warnings(object)
-  n <- length(warnings)
-  bullets <- paste("* ", warnings, collapse = "\n")
-
-  msg <- sprintf(ngettext(n, "%d warning", "%d warnings"), n)
-
-  if (identical(regexp, NA)) {
-    expect(
-      length(warnings) == 0,
-      sprintf("%s showed %s.\n%s", lab, msg, bullets),
-      info = info
-    )
-  } else if (is.null(regexp) || length(warnings) == 0) {
-    expect(
-      length(warnings) > 0,
-      sprintf("%s showed %s", lab, msg),
-      info = info
-    )
-  } else {
-    expect_match(warnings, regexp, all = all, ...,info = info)
-  }
-
-  invisible(object)
+  invisible(act$val)
 }
 
 #' @export
 #' @rdname output-expectations
 expect_silent <- function(object) {
-  lab <- label(object)
-  out <- evaluate_promise(object)
+  act <- quasi_capture(enquo(object), evaluate_promise)
 
   outputs <- c(
-    if (!identical(out$output, "")) "output",
-    if (length(out$warnings) > 0) "warnings",
-    if (length(out$messages) > 0) "messages"
+    if (!identical(act$cap$output, "")) "output",
+    if (length(act$cap$warnings) > 0) "warnings",
+    if (length(act$cap$messages) > 0) "messages"
   )
 
   expect(
     length(outputs) == 0,
-    sprintf("%s produced %s.", lab, paste(outputs, collapse = ", "))
+    sprintf("%s produced %s.", act$lab, paste(outputs, collapse = ", "))
   )
 
-  invisible(out$result)
+  invisible(act$cap$result)
+}
+
+
+
+# Helpers -----------------------------------------------------------------
+
+compare_condition <- function(cond, lab, regexp = NULL, class = NULL, ...,
+                              cond_type = "error") {
+
+  # Expecting no condition
+  if (identical(regexp, NA)) {
+    if (!is.null(cond)) {
+      return(sprintf(
+        "%s threw an %s.\nMessage: %s\nClass:   %s",
+        lab,
+        cond_type,
+        cond$message,
+        paste(class(cond), collapse = "/")
+      ))
+    } else {
+      return()
+    }
+  }
+
+  # Otherwise we're definitely expecting a condition
+  if (is.null(cond)) {
+    return(sprintf("%s did not throw an %s.", lab, cond_type))
+  }
+
+  ok_class <- is.null(class) || inherits(cond, class)
+  ok_msg <- is.null(regexp) || grepl(regexp, cond$message, ...)
+
+  # All good
+  if (ok_msg && ok_class) {
+    return()
+  }
+
+  problems <- c(if (!ok_class) "class", if (!ok_msg) "message")
+
+  details <- c(
+    if (!ok_class) {
+      sprintf(
+        "Expected class: %s\nActual class:   %s",
+        paste0(class, collapse = "/"),
+        paste0(class(cond), collapse = "/")
+      )
+    },
+    if (!ok_msg) {
+      sprintf(
+        "Expected match: %s\nActual message: %s",
+        encodeString(regexp, quote = '"'),
+        encodeString(cond$message, quote = '"')
+      )
+    }
+  )
+
+  sprintf(
+    "%s threw an %s with unexpected %s.\n%s",
+    lab,
+    cond_type,
+    paste(problems, collapse = " and "),
+    paste(details, collapse = "\n")
+  )
+}
+
+
+compare_messages <- function(messages,
+                             lab,
+                             regexp = NA, ...,
+                             all = FALSE,
+                             cond_type = "messages") {
+  bullets <- paste0("* ", messages, collapse = "\n")
+  # Expecting no messages
+  if (identical(regexp, NA)) {
+    if (length(messages) > 0) {
+      return(sprintf("%s generated %s:\n%s", lab, cond_type, bullets))
+    } else {
+      return()
+    }
+  }
+
+  # Otherwise we're definitely expecting messages
+  if (length(messages) == 0) {
+    return(sprintf("%s did not produce any %s.", lab, cond_type))
+  }
+
+  if (is.null(regexp)) {
+    return()
+  }
+
+  matched <- grepl(regexp, messages, ...)
+
+  # all/any ok
+  if ((all && all(matched)) || (!all && any(matched))) {
+    return()
+  }
+
+  sprintf(
+    "%s produced unexpected %s.\n%s\n%s",
+    lab,
+    cond_type,
+    paste0("Expected match: ", encodeString(regexp)),
+    paste0("Actual values:\n", bullets)
+  )
 }

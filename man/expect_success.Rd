@@ -3,11 +3,17 @@
 \name{expect_success}
 \alias{expect_success}
 \alias{expect_failure}
+\alias{show_failure}
+\alias{expect_known_failure}
 \title{Tools for testing expectations}
 \usage{
 expect_success(expr)
 
 expect_failure(expr, message = NULL, ...)
+
+show_failure(expr)
+
+expect_known_failure(path, expr)
 }
 \arguments{
 \item{expr}{Expression that evaluates a single expectation.}
@@ -15,8 +21,12 @@ expect_failure(expr, message = NULL, ...)
 \item{message}{Check that the failure message matches this regexp.}
 
 \item{...}{Other arguments passed on to \code{\link[=expect_match]{expect_match()}}.}
+
+\item{path}{Path to save failure output}
 }
 \description{
 Use these expectations to test other expectations.
+Use \code{show_failure()} in examples to print the failure message without
+throwing an erorr.
 }
 \keyword{internal}

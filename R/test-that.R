@@ -147,10 +147,12 @@ test_code <- function(test, code, env = test_env(), skip_on_empty = TRUE) {
 
   test_env <- new.env(parent = env)
   tryCatch(
-    withCallingHandlers({
-      eval(code, test_env)
-      if (!handled && !is.null(test))
-        skip_empty()
+    withCallingHandlers(
+      {
+        eval(code, test_env)
+        if (!handled && !is.null(test)) {
+          skip_empty()
+        }
       },
       expectation = handle_expectation,
       skip =        handle_skip,
@@ -161,7 +163,7 @@ test_code <- function(test, code, env = test_env(), skip_on_empty = TRUE) {
     # some errors may need handling here, e.g., stack overflow
     error = handle_fatal,
     # skip silently terminate code
-    skip =  function(e) {}
+    skip  = function(e) {}
   )
 
 
@@ -173,31 +175,19 @@ test_code <- function(test, code, env = test_env(), skip_on_empty = TRUE) {
 #' Try the example below. Have a look at the references and learn more
 #' from function documentation such as [expect_that()].
 #'
-#' @details Software testing is important, but, in part because
-#' it is frustrating and boring, many of us avoid it.
-#'
-#' testthat is a new testing framework for R that is easy learn and use,
-#' and integrates with your existing workflow.
-#'
 #' @section Options:
-#' - `testthat.use_colours`: Should the output be coloured? (Default:
-#' `TRUE`).
-#'
+#' - `testthat.use_colours`: Should the output be coloured? (Default: `TRUE`).
 #' - `testthat.summary.max_reports`: The maximum number of detailed test
-#' reports printed for the summary reporter (default: 15).
-#'
+#'    reports printed for the summary reporter (default: 10).
 #' - `testthat.summary.omit_dots`: Omit progress dots in the summary reporter
-#' (default: `FALSE`).
+#'    (default: `FALSE`).
 #'
-#' @docType package
-#' @name testthat
 #' @import rlang
+#' @keywords internal
 #' @useDynLib testthat, .registration = TRUE
 #' @references Wickham, H (2011). testthat: Get Started with Testing.
 #' \strong{The R Journal} \emph{3/1} 5-10.
 #' \url{http://journal.r-project.org/archive/2011-1/RJournal_2011-1_Wickham.pdf}
-#'
-#' \url{https://github.com/hadley/testthat}
 #'
 #' \url{http://adv-r.had.co.nz/Testing.html}
 #'
@@ -205,5 +195,5 @@ test_code <- function(test, code, env = test_env(), skip_on_empty = TRUE) {
 #' library(testthat)
 #' a <- 9
 #' expect_that(a, is_less_than(10))
-#' expect_less_than(a, 10)
-NULL
+#' expect_lt(a, 10)
+"_PACKAGE"

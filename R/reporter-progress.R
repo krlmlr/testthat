@@ -12,14 +12,14 @@ NULL
 #'
 #' @export
 #' @family reporters
-ProgressReporter <- R6::R6Class("ProgressReporter", inherit = Reporter,
+#' @importFrom clisymbols symbol
+ProgressReporter <- R6::R6Class("ProgressReporter",
+  inherit = Reporter,
   public = list(
-    failures = NULL,
-    skips = NULL,
-    warnings = NULL,
     show_praise = TRUE,
+    min_time = 0.1,
 
-    max_failures = NULL,
+    max_fail = NULL,
     n_ok = 0,
     n_skip = 0,
     n_warn = 0,
@@ -35,11 +35,17 @@ ProgressReporter <- R6::R6Class("ProgressReporter", inherit = Reporter,
     ctxt_name = 0,
 
     initialize = function(show_praise = TRUE,
-                          max_failures = getOption("testthat.progress.max_fails", 10L)
-                          ) {
-      super$initialize()
-      self$max_failures <- max_failures
+                          max_failures = getOption("testthat.progress.max_fails", 10L),
+                          min_time = 0.1,
+                          ...) {
+      super$initialize(...)
+      self$max_fail <- max_failures
       self$show_praise <- show_praise
+      self$min_time <- min_time
+    },
+
+    is_full = function() {
+      self$n_fail >= self$max_fail
     },
 
     start_reporter = function(context) {
@@ -62,7 +68,7 @@ ProgressReporter <- R6::R6Class("ProgressReporter", inherit = Reporter,
 
     show_header = function() {
       self$cat_line(
-        clisymbols::symbol$tick, " | OK ",
+        symbol$tick, " | OK ",
         colourise("F", "failure"), " ",
         colourise("W", "warning"), " ",
         colourise("S", "skip"), " | ",
@@ -71,12 +77,11 @@ ProgressReporter <- R6::R6Class("ProgressReporter", inherit = Reporter,
     },
 
     show_status = function(complete = FALSE) {
-
       if (complete) {
         if (self$ctxt_n_fail > 0) {
-          status <- crayon::red(clisymbols::symbol$cross)
+          status <- crayon::red(symbol$cross)
         } else {
-          status <- crayon::green(clisymbols::symbol$tick)
+          status <- crayon::green(symbol$tick)
         }
       } else {
         status <- spinner(self$ctxt_n)
@@ -93,9 +98,9 @@ ProgressReporter <- R6::R6Class("ProgressReporter", inherit = Reporter,
       self$cat_tight(
         "\r",
         status, " | ", sprintf("%2d", self$ctxt_n_ok), " ",
-        col_format(self$ctxt_n_fail), " ",
-        col_format(self$ctxt_n_warn), " ",
-        col_format(self$ctxt_n_skip), " | ",
+        col_format(self$ctxt_n_fail, "fail"), " ",
+        col_format(self$ctxt_n_warn, "warn"), " ",
+        col_format(self$ctxt_n_skip, "skip"), " | ",
         self$ctxt_name
       )
     },
@@ -105,8 +110,8 @@ ProgressReporter <- R6::R6Class("ProgressReporter", inherit = Reporter,
 
       self$show_status(complete = TRUE)
 
-      if (time[[3]] > 0.1) {
-        self$cat(crayon::white(sprintf(" [%.1f s]", time[[3]])))
+      if (time[[3]] > self$min_time) {
+        self$cat(crayon::cyan(sprintf(" [%.1f s]", time[[3]])))
       }
       self$cat_line()
 
@@ -148,23 +153,33 @@ ProgressReporter <- R6::R6Class("ProgressReporter", inherit = Reporter,
     end_reporter = function() {
       self$cat_line()
 
-      self$cat_line("OK:       ", self$n_ok)
-      self$cat_line("Failed:   ", self$n_fail)
-      self$cat_line("Warnings: ", self$n_warn)
-      self$cat_line("Skipped:  ", self$n_skip)
-
-      if (!self$show_praise || runif(1) > 0.1)
+      if (self$is_full()) {
+        self$rule("Terminating early", pad = "=")
+        self$cat_line("Too many failures")
         return()
+      }
 
+      colour_if <- function(n, type) {
+        colourise(n, if (n == 0) "success" else type)
+      }
+
+      self$rule(crayon::bold("Results"), pad = "=")
+      self$cat_line("OK:       ", colourise(self$n_ok, "success"))
+      self$cat_line("Failed:   ", colour_if(self$n_fail, "fail"))
+      self$cat_line("Warnings: ", colour_if(self$n_warn, "warn"))
+      self$cat_line("Skipped:  ", colour_if(self$n_skip, "skip"))
+
+      if (!self$show_praise || runif(1) > 0.1) {
+        return()
+      }
+
+      self$cat_line()
       if (self$n_fail == 0) {
         self$cat_line(colourise(praise(), "success"))
       } else {
         self$cat_line(colourise(encourage(), "error"))
       }
     }
-  ),
-
-  private = list(
   )
 )
 
@@ -181,16 +196,19 @@ spinner <- function(i) {
 
 
 issue_summary <- function(x) {
-  type <- switch(expectation_type(x),
-    error = "Error",
-    failure = "Failure",
-    skip = "Skip",
-    warning = "Warning"
-  )
+  type <- expectation_type(x)
+
+  if (is.null(x$srcref)) {
+    loc <- "???"
+  } else {
+    filename <- attr(x$srcref, "srcfile")$filename
+    loc <- paste0(basename(filename), ":", x$srcref[1])
+  }
+
+  header <- paste0(loc, ": ", colourise(type, type), ": ", x$test)
 
   paste0(
-    colourise(type, expectation_type(x)), ": ",
-    x$test, crayon::blue(src_loc(x$srcref)), "\n",
+    crayon::bold(header), "\n",
     format(x)
   )
 }

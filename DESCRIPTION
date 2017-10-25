@@ -3,15 +3,16 @@ Title: Unit Testing for R
 Version: 1.0.2.9000
 Authors@R: c(
     person("Hadley", "Wickham", , "hadley@rstudio.com", c("aut", "cre")),
-    person("RStudio", role = "cph"),
+    person("RStudio", role = c("cph", "fnd")),
     person("R Core team", role = "ctb",
       comment = "Implementation of utils::recover()")
     )
-Description: A unit testing system designed to be fun, flexible and easy to
-    set up.
+Description: Software testing is important, but, in part because it is 
+    frustrating and boring, many of us avoid it. testthat is a testing framework 
+    for R that is easy learn and use, and integrates with your existing workflow.
 License: MIT + file LICENSE
-URL: https://github.com/hadley/testthat
-BugReports: https://github.com/hadley/testthat/issues
+URL: http://testthat.r-lib.org, https://github.com/r-lib/testthat
+BugReports: https://github.com/r-lib/testthat/issues
 Encoding: UTF-8
 Depends: 
     R (>= 3.1)
@@ -23,16 +24,20 @@ Imports:
     methods,
     praise,
     R6 (>= 2.2.0),
-    rlang
+    rlang,
+    withr (>= 2.0.0)
 Suggests: 
     covr,
     devtools,
-    withr,
-    xml2
+    xml2,
+    knitr,
+    rmarkdown
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 6.0.1
 Collate: 
     'auto-test.R'
+    'capture-condition.R'
+    'capture-output.R'
     'colour-text.R'
     'compare.R'
     'compare-character.R'
@@ -42,9 +47,9 @@ Collate:
     'describe.R'
     'evaluate-promise.R'
     'expect-comparison.R'
-    'expect-equal-to-reference.R'
     'expect-equality.R'
     'expect-inheritance.R'
+    'expect-known.R'
     'expect-length.R'
     'expect-logical.R'
     'expect-named.R'
@@ -59,7 +64,6 @@ Collate:
     'old-school.R'
     'praise.R'
     'recover.R'
-    'regress-output.R'
     'reporter-check.R'
     'reporter-debug.R'
     'reporter-fail.R'
@@ -81,9 +85,9 @@ Collate:
     'source.R'
     'teardown.R'
     'test-compiled-code.R'
+    'test-directory.R'
     'test-example.R'
     'test-files.R'
-    'test-package.R'
     'test-path.R'
     'test-that.R'
     'traceback.R'
@@ -91,3 +95,4 @@ Collate:
     'utils-io.R'
     'utils.R'
     'watcher.R'
+VignetteBuilder: knitr
