@@ -34,11 +34,29 @@ Reporter <- R6::R6Class("Reporter",
     },
 
     cat_line = function(...) {
-      cli::cat_line(..., file = self$out)
+      # cat_line() doesn't know append argument
+      if (is.character(self$out)) {
+        con <- file(self$out, "a+")
+      } else {
+        con <- self$out
+      }
+      cli::cat_line(..., file = con)
+      if (is.character(self$out)) {
+        close(con)
+      }
     },
 
     rule = function(...) {
-      cli::cat_rule(..., file = self$out)
+      # cat_rule() doesn't know append argument
+      if (is.character(self$out)) {
+        con <- file(self$out, "a+")
+      } else {
+        con <- self$out
+      }
+      cli::cat_rule(..., file = con)
+      if (is.character(self$out)) {
+        close(con)
+      }
     },
 
     # The hierarchy of contexts are implied - a context starts with a
